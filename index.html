@@ -37,16 +37,16 @@
           <p id="date">Loading...</p>
         </div>
 
-        <div class="search-engines" id="engine-tabs">
-          <button class="engine-tab active" data-engine="google">Google</button>
-          <button class="engine-tab" data-engine="duckduckgo">DuckDuckGo</button>
-          <button class="engine-tab" data-engine="youtube">YouTube</button>
+        <div class="engine-selector-container">
+          <select id="engine-select" class="engine-dropdown"></select>
+          <button id="open-engine-modal" class="pill-btn small-btn" title="Add Search Engine">
+            <i class="ph ph-plus"></i>
+          </button>
         </div>
         
         <form class="search-form" id="search-form" action="https://www.google.com/search" method="GET">
           <i class="ph ph-magnifying-glass search-icon"></i>
-          <!-- Name is dynamic based on engine -->
-          <input type="text" name="q" id="search-input" placeholder="Search Google..." autocomplete="off" autofocus>
+          <input type="text" name="q" id="search-input" placeholder="Search..." autocomplete="off" autofocus>
         </form>
       </div>
     </main>
@@ -79,6 +79,30 @@
       <div class="modal-actions">
         <button class="btn secondary" id="cancel-add">Cancel</button>
         <button class="btn primary" id="save-add">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Search Engine Modal -->
+  <div class="modal-overlay" id="engine-modal">
+    <div class="glass-card modal-content">
+      <h2>Add Search Engine</h2>
+      <div class="input-group">
+        <label for="engine-name">Name</label>
+        <input type="text" id="engine-name" placeholder="e.g. Bing">
+      </div>
+      <div class="input-group">
+        <label for="engine-url">Search URL</label>
+        <input type="url" id="engine-url" placeholder="https://www.bing.com/search">
+      </div>
+      <div class="input-group">
+        <label for="engine-param">Query Parameter</label>
+        <input type="text" id="engine-param" placeholder="e.g. q">
+        <small>The URL parameter used for the search query.</small>
+      </div>
+      <div class="modal-actions">
+        <button class="btn secondary" id="cancel-engine">Cancel</button>
+        <button class="btn primary" id="save-engine">Save</button>
       </div>
     </div>
   </div>

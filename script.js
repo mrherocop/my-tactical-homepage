@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateClock, 1000);
   initSearch();
   initLinks();
-  initModal();
+  initLinkModal();
+  initEngineModal();
 });
 
 // Theme Management
@@ -58,60 +59,152 @@ function updateClock() {
   dateEl.textContent = now.toLocaleDateString('en-US', options);
 }
 
-// Search Management
+// --- Search Engine Management ---
+const defaultEngines = [
+  { id: 'google', name: 'Google', url: 'https://www.google.com/search', param: 'q' },
+  { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com/', param: 'q' },
+  { id: 'youtube', name: 'YouTube', url: 'https://www.youtube.com/results', param: 'search_query' }
+];
+
+function getEngines() {
+  const saved = localStorage.getItem('search_engines');
+  if (saved) return JSON.parse(saved);
+  return defaultEngines;
+}
+
+function saveEngines(engines) {
+  localStorage.setItem('search_engines', JSON.stringify(engines));
+}
+
 function initSearch() {
-  const tabs = document.querySelectorAll('.engine-tab');
+  const selectEl = document.getElementById('engine-select');
   const form = document.getElementById('search-form');
   const input = document.getElementById('search-input');
   
-  const engines = {
-    'google': { url: 'https://www.google.com/search', param: 'q', placeholder: 'Search Google...' },
-    'duckduckgo': { url: 'https://duckduckgo.com/', param: 'q', placeholder: 'Search DuckDuckGo...' },
-    'youtube': { url: 'https://www.youtube.com/results', param: 'search_query', placeholder: 'Search YouTube...' }
-  };
-  
-  // Load saved engine
-  const savedEngine = localStorage.getItem('searchEngine') || 'google';
-  setEngine(savedEngine);
-  
-  tabs.forEach(tab => {
-    tab.addEventListener('click', (e) => {
-      const engine = e.target.getAttribute('data-engine');
-      setEngine(engine);
-      localStorage.setItem('searchEngine', engine);
-    });
-  });
-
-  function setEngine(engineKey) {
-    tabs.forEach(t => t.classList.remove('active'));
-    document.querySelector(`.engine-tab[data-engine="${engineKey}"]`).classList.add('active');
+  function renderDropdown() {
+    const engines = getEngines();
+    selectEl.innerHTML = '';
     
-    const config = engines[engineKey];
-    form.action = config.url;
-    input.name = config.param;
-    input.placeholder = config.placeholder;
+    engines.forEach(eng => {
+      const option = document.createElement('option');
+      option.value = eng.id;
+      option.textContent = eng.name;
+      selectEl.appendChild(option);
+    });
+    
+    const savedEngineId = localStorage.getItem('activeEngine') || 'google';
+    if (engines.some(e => e.id === savedEngineId)) {
+      selectEl.value = savedEngineId;
+    } else {
+      selectEl.value = engines[0].id;
+    }
+    
+    updateFormFromSelection();
+  }
+
+  function updateFormFromSelection() {
+    const engines = getEngines();
+    const active = engines.find(e => e.id === selectEl.value) || engines[0];
+    form.action = active.url;
+    input.name = active.param;
+    input.placeholder = `Search ${active.name}...`;
     input.focus();
   }
-  
+
+  selectEl.addEventListener('change', () => {
+    localStorage.setItem('activeEngine', selectEl.value);
+    updateFormFromSelection();
+  });
+
   // URL detection
   form.addEventListener('submit', (e) => {
     const query = input.value.trim();
     if (query) {
       const urlPattern = /^(https?:\/\/)?([\w.-]+)\.([a-z]{2,})(\/\S*)?$/i;
-      // If it looks like a URL, go straight there instead of searching
       if (urlPattern.test(query) && !query.includes(' ')) {
         e.preventDefault();
         let url = query;
-        if (!/^https?:\/\//i.test(url)) {
-          url = 'https://' + url;
-        }
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
         window.location.href = url;
       }
     }
   });
+
+  // Expose renderDropdown to be called from modal
+  window.renderEngineDropdown = renderDropdown;
+  renderDropdown();
 }
 
-// Links Management
+function initEngineModal() {
+  const modal = document.getElementById('engine-modal');
+  const cancelBtn = document.getElementById('cancel-engine');
+  const saveBtn = document.getElementById('save-engine');
+  const openBtn = document.getElementById('open-engine-modal');
+  
+  const nameInput = document.getElementById('engine-name');
+  const urlInput = document.getElementById('engine-url');
+  const paramInput = document.getElementById('engine-param');
+  
+  openBtn.addEventListener('click', () => {
+    modal.classList.add('active');
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    modal.classList.remove('active');
+    nameInput.value = ''; urlInput.value = ''; paramInput.value = '';
+  });
+  
+  saveBtn.addEventListener('click', () => {
+    const name = nameInput.value.trim();
+    let url = urlInput.value.trim();
+    const param = paramInput.value.trim() || 'q';
+    
+    if (name && url) {
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      
+      const engines = getEngines();
+      const newId = Date.now().toString();
+      engines.push({
+        id: newId,
+        name,
+        url,
+        param
+      });
+      
+      saveEngines(engines);
+      localStorage.setItem('activeEngine', newId); // Set as active
+      if (window.renderEngineDropdown) window.renderEngineDropdown();
+      
+      modal.classList.remove('active');
+      nameInput.value = ''; urlInput.value = ''; paramInput.value = '';
+    } else {
+      alert('Please enter a name and URL');
+    }
+  });
+
+  // Right click on select to remove active engine
+  const selectEl = document.getElementById('engine-select');
+  selectEl.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    const activeId = selectEl.value;
+    const engines = getEngines();
+    const activeEng = engines.find(eng => eng.id === activeId);
+    
+    if (defaultEngines.some(de => de.id === activeId)) {
+      alert("Cannot delete default search engine.");
+      return;
+    }
+    
+    if (activeEng && confirm(`Remove ${activeEng.name} search engine?`)) {
+      const filtered = engines.filter(eng => eng.id !== activeId);
+      saveEngines(filtered);
+      localStorage.setItem('activeEngine', 'google');
+      if (window.renderEngineDropdown) window.renderEngineDropdown();
+    }
+  });
+}
+
+// --- Links Management ---
 const defaultLinks = [
   { id: '1', name: 'GitHub', url: 'https://github.com', icon: 'ph-github-logo' },
   { id: '2', name: 'YouTube', url: 'https://youtube.com', icon: 'ph-youtube-logo' },
@@ -125,9 +218,7 @@ function initLinks() {
 
 function getLinks() {
   const saved = localStorage.getItem('custom_links');
-  if (saved) {
-    return JSON.parse(saved);
-  }
+  if (saved) return JSON.parse(saved);
   return defaultLinks;
 }
 
@@ -152,7 +243,6 @@ function renderLinks() {
       <span>${link.name}</span>
     `;
     
-    // Add context menu to delete
     el.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       if(confirm(`Remove ${link.name}?`)) {
@@ -186,8 +276,8 @@ function removeLink(id) {
   renderLinks();
 }
 
-// Modal Management
-function initModal() {
+// Link Modal Management
+function initLinkModal() {
   const modal = document.getElementById('add-modal');
   const cancelBtn = document.getElementById('cancel-add');
   const saveBtn = document.getElementById('save-add');
@@ -198,7 +288,7 @@ function initModal() {
   
   cancelBtn.addEventListener('click', () => {
     modal.classList.remove('active');
-    clearModal();
+    nameInput.value = ''; urlInput.value = ''; iconInput.value = '';
   });
   
   saveBtn.addEventListener('click', () => {
@@ -207,30 +297,17 @@ function initModal() {
     const icon = iconInput.value.trim() || 'ph-link';
     
     if (name && url) {
-      if (!/^https?:\/\//i.test(url)) {
-        url = 'https://' + url;
-      }
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
       
       const links = getLinks();
-      links.push({
-        id: Date.now().toString(),
-        name,
-        url,
-        icon
-      });
-      
+      links.push({ id: Date.now().toString(), name, url, icon });
       saveLinks(links);
       renderLinks();
+      
       modal.classList.remove('active');
-      clearModal();
+      nameInput.value = ''; urlInput.value = ''; iconInput.value = '';
     } else {
       alert('Please enter a name and URL');
     }
   });
-  
-  function clearModal() {
-    nameInput.value = '';
-    urlInput.value = '';
-    iconInput.value = '';
-  }
 }
