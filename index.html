@@ -20,9 +20,14 @@
     
     <!-- Top Widgets -->
     <header class="top-bar">
-      <button class="pill-btn theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
-        <i class="ph ph-moon"></i>
-      </button>
+      <div style="display: flex; gap: 10px;">
+        <button class="pill-btn theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+          <i class="ph ph-moon"></i>
+        </button>
+        <button class="pill-btn" id="open-widget-modal" title="Add Custom Widget">
+          <i class="ph ph-squares-four"></i>
+        </button>
+      </div>
       <div class="pill-widget" id="weather-widget">
         <i class="ph ph-cloud-sun"></i>
         <span>22°C</span>
@@ -48,6 +53,11 @@
           <i class="ph ph-magnifying-glass search-icon"></i>
           <input type="text" name="q" id="search-input" placeholder="Search..." autocomplete="off" autofocus>
         </form>
+      </div>
+      
+      <!-- Custom Widgets -->
+      <div class="widgets-grid" id="widgets-grid">
+        <!-- Widgets will be injected here -->
       </div>
     </main>
 
@@ -103,6 +113,22 @@
       <div class="modal-actions">
         <button class="btn secondary" id="cancel-engine">Cancel</button>
         <button class="btn primary" id="save-engine">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Widget Modal -->
+  <div class="modal-overlay" id="widget-modal">
+    <div class="glass-card modal-content">
+      <h2>Embed Custom Widget</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Paste HTML or iframe code from WidgetBox or Indify.</p>
+      <div class="input-group">
+        <label for="widget-code">HTML / iframe Code</label>
+        <textarea id="widget-code" rows="5" placeholder="<iframe src='...' ></iframe>" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--card-border); background: var(--pill-bg); color: var(--text-main); outline: none; font-size: 14px; resize: vertical;"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn secondary" id="cancel-widget">Cancel</button>
+        <button class="btn primary" id="save-widget">Save Widget</button>
       </div>
     </div>
   </div>

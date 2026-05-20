@@ -339,6 +339,54 @@ body {
   background: rgba(255,255,255,0.1);
 }
 
+/* Custom Widgets CSS */
+.widgets-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.custom-widget-box {
+  background: var(--card-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+  box-shadow: var(--card-shadow);
+  padding: 15px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.custom-widget-box.edit-mode {
+  animation: shake 0.5s infinite alternate;
+}
+
+.delete-widget-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff4b4b;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 20;
+}
+
+.widget-content iframe {
+  border-radius: 12px;
+  border: none;
+}
+
 .dock-item span, .add-link-btn span {
   font-size: 12px;
   font-weight: 500;

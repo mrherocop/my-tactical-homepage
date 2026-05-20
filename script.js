@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initLinks();
   initLinkModal();
   initEngineModal();
+  initWidgets();
+  initWidgetModal();
 });
 
 // Theme Management
@@ -63,7 +65,11 @@ function updateClock() {
 const defaultEngines = [
   { id: 'google', name: 'Google', url: 'https://www.google.com/search', param: 'q' },
   { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com/', param: 'q' },
-  { id: 'youtube', name: 'YouTube', url: 'https://www.youtube.com/results', param: 'search_query' }
+  { id: 'youtube', name: 'YouTube', url: 'https://www.youtube.com/results', param: 'search_query' },
+  { id: 'bing', name: 'Bing', url: 'https://www.bing.com/search', param: 'q' },
+  { id: 'wikipedia', name: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Special:Search', param: 'search' },
+  { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai/search', param: 'q' },
+  { id: 'github', name: 'GitHub', url: 'https://github.com/search', param: 'q' }
 ];
 
 function getEngines() {
@@ -130,7 +136,6 @@ function initSearch() {
     }
   });
 
-  // Expose renderDropdown to be called from modal
   window.renderEngineDropdown = renderDropdown;
   renderDropdown();
 }
@@ -172,7 +177,7 @@ function initEngineModal() {
       });
       
       saveEngines(engines);
-      localStorage.setItem('activeEngine', newId); // Set as active
+      localStorage.setItem('activeEngine', newId);
       if (window.renderEngineDropdown) window.renderEngineDropdown();
       
       modal.classList.remove('active');
@@ -182,7 +187,7 @@ function initEngineModal() {
     }
   });
 
-  // Right click on select to remove active engine
+  // Right click to remove active engine
   const selectEl = document.getElementById('engine-select');
   selectEl.addEventListener('contextmenu', (e) => {
     e.preventDefault();
@@ -215,7 +220,6 @@ const defaultLinks = [
 let isEditMode = false;
 
 function initLinks() {
-  // Check if they ever initialized links (to allow empty array)
   if (localStorage.getItem('custom_links') === null) {
     saveLinks(defaultLinks);
   }
@@ -243,7 +247,6 @@ function renderLinks() {
     el.href = isEditMode ? '#' : link.url;
     el.className = 'dock-item' + (isEditMode ? ' edit-mode' : '');
     
-    // Determine if it's a Phosphor icon or a favicon
     let iconHTML = '';
     if (link.icon && link.icon.startsWith('ph-')) {
       iconHTML = `<i class="ph ${link.icon}"></i>`;
@@ -281,7 +284,6 @@ function renderLinks() {
     container.appendChild(el);
   });
   
-  // Add Link Button
   const addBtn = document.createElement('button');
   addBtn.className = 'add-link-btn';
   addBtn.id = 'open-add-modal';
@@ -296,7 +298,6 @@ function renderLinks() {
   });
   container.appendChild(addBtn);
 
-  // Edit Mode Toggle Button
   const editBtn = document.createElement('button');
   editBtn.className = 'add-link-btn';
   editBtn.innerHTML = `
@@ -308,6 +309,7 @@ function renderLinks() {
   editBtn.addEventListener('click', () => {
     isEditMode = !isEditMode;
     renderLinks();
+    renderWidgets(); // Also toggle edit mode for widgets
   });
   container.appendChild(editBtn);
 }
@@ -319,7 +321,6 @@ function removeLink(id) {
   renderLinks();
 }
 
-// Link Modal Management
 function initLinkModal() {
   const modal = document.getElementById('add-modal');
   const cancelBtn = document.getElementById('cancel-add');
@@ -337,7 +338,7 @@ function initLinkModal() {
   saveBtn.addEventListener('click', () => {
     const name = nameInput.value.trim();
     let url = urlInput.value.trim();
-    const icon = iconInput.value.trim(); // Leave empty to fetch favicon
+    const icon = iconInput.value.trim();
     
     if (name && url) {
       if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
@@ -351,6 +352,94 @@ function initLinkModal() {
       nameInput.value = ''; urlInput.value = ''; iconInput.value = '';
     } else {
       alert('Please enter a name and URL');
+    }
+  });
+}
+
+// --- Custom Widgets Management ---
+
+function getWidgets() {
+  const saved = localStorage.getItem('custom_widgets');
+  if (saved) return JSON.parse(saved);
+  return [];
+}
+
+function saveWidgets(widgets) {
+  localStorage.setItem('custom_widgets', JSON.stringify(widgets));
+}
+
+function initWidgets() {
+  renderWidgets();
+}
+
+function renderWidgets() {
+  const container = document.getElementById('widgets-grid');
+  if (!container) return;
+  const widgets = getWidgets();
+  
+  container.innerHTML = '';
+  
+  widgets.forEach(widget => {
+    const el = document.createElement('div');
+    el.className = 'custom-widget-box' + (isEditMode ? ' edit-mode' : '');
+    el.innerHTML = `
+      <div class="widget-content">${widget.code}</div>
+      ${isEditMode ? '<button class="delete-widget-btn"><i class="ph ph-x"></i></button>' : ''}
+    `;
+    
+    if (isEditMode) {
+      const delBtn = el.querySelector('.delete-widget-btn');
+      if(delBtn) {
+        delBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          removeWidget(widget.id);
+        });
+      }
+    }
+    
+    container.appendChild(el);
+  });
+}
+
+function removeWidget(id) {
+  let widgets = getWidgets();
+  widgets = widgets.filter(w => w.id !== id);
+  saveWidgets(widgets);
+  renderWidgets();
+}
+
+function initWidgetModal() {
+  const modal = document.getElementById('widget-modal');
+  const cancelBtn = document.getElementById('cancel-widget');
+  const saveBtn = document.getElementById('save-widget');
+  const openBtn = document.getElementById('open-widget-modal');
+  
+  const codeInput = document.getElementById('widget-code');
+  
+  if(openBtn) {
+    openBtn.addEventListener('click', () => {
+      modal.classList.add('active');
+    });
+  }
+
+  cancelBtn.addEventListener('click', () => {
+    modal.classList.remove('active');
+    codeInput.value = '';
+  });
+  
+  saveBtn.addEventListener('click', () => {
+    const code = codeInput.value.trim();
+    
+    if (code) {
+      const widgets = getWidgets();
+      widgets.push({ id: Date.now().toString(), code });
+      saveWidgets(widgets);
+      renderWidgets();
+      
+      modal.classList.remove('active');
+      codeInput.value = '';
+    } else {
+      alert('Please paste some HTML or iframe code');
     }
   });
 }
