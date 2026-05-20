@@ -9,82 +9,121 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Background Diorama -->
-  <div class="background-wrapper">
-    <img src="assets/light_bg.jpg" class="bg-img" id="light-bg" alt="Light Mode Background">
-    <img src="assets/dark_bg.jpg" class="bg-img" id="dark-bg" alt="Dark Mode Background">
+
+  <!-- Dynamic Background Layer -->
+  <div class="background-wrapper" id="background-wrapper">
+    <div class="bg-layer" id="bg-active"></div>
+    <div class="bg-layer" id="bg-next" style="opacity:0;"></div>
   </div>
 
-  <!-- Main UI Layer -->
+  <!-- Main UI -->
   <div class="ui-layer">
-    
-    <!-- Top Widgets -->
+
+    <!-- Top Bar -->
     <header class="top-bar">
-      <div style="display: flex; gap: 10px;">
-        <button class="pill-btn theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
-          <i class="ph ph-moon"></i>
-        </button>
-        <button class="pill-btn" id="open-widget-modal" title="Add Custom Widget">
-          <i class="ph ph-squares-four"></i>
-        </button>
+      <div class="top-left">
+        <button class="pill-btn" id="theme-toggle" title="Toggle Theme"><i class="ph ph-moon"></i></button>
+        <button class="pill-btn" id="open-widget-modal" title="Add Widget"><i class="ph ph-squares-four"></i></button>
+        <button class="pill-btn" id="open-customize" title="Customize"><i class="ph ph-paint-brush"></i></button>
       </div>
-      <div class="pill-widget" id="weather-widget">
+      <div class="pill-widget">
         <i class="ph ph-cloud-sun"></i>
         <span>22°C</span>
       </div>
     </header>
 
-    <!-- Center Content -->
+    <!-- Center -->
     <main class="center-content">
       <div class="glass-card main-widget">
         <div class="clock-container">
           <h1 id="time">00:00</h1>
           <p id="date">Loading...</p>
         </div>
-
         <div class="engine-selector-container">
           <select id="engine-select" class="engine-dropdown"></select>
           <button id="open-engine-modal" class="pill-btn small-btn" title="Add Search Engine">
             <i class="ph ph-plus"></i>
           </button>
         </div>
-        
         <form class="search-form" id="search-form" action="https://www.google.com/search" method="GET">
           <i class="ph ph-magnifying-glass search-icon"></i>
-          <input type="text" name="q" id="search-input" placeholder="Search..." autocomplete="off" autofocus>
+          <input type="text" name="q" id="search-input" placeholder="Search Google..." autocomplete="off" autofocus>
         </form>
       </div>
-      
-      <!-- Custom Widgets -->
-      <div class="widgets-grid" id="widgets-grid">
-        <!-- Widgets will be injected here -->
-      </div>
+      <div class="widgets-grid" id="widgets-grid"></div>
     </main>
 
     <!-- Bottom Dock -->
     <footer class="bottom-dock-container">
-      <div class="dock glass-card" id="links-container">
-        <!-- Links will be injected here by JS -->
-      </div>
+      <div class="dock glass-card" id="links-container"></div>
     </footer>
   </div>
 
-  <!-- Add Link Modal -->
+  <!-- ══════ CUSTOMIZE DRAWER ══════ -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <aside class="customize-drawer" id="customize-drawer">
+    <div class="drawer-header">
+      <h2><i class="ph ph-paint-brush"></i> Customize</h2>
+      <button class="drawer-close" id="close-customize"><i class="ph ph-x"></i></button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="drawer-tabs">
+      <button class="drawer-tab active" data-tab="wallpaper">Wallpaper</button>
+      <button class="drawer-tab" data-tab="colorTheme">Color Theme</button>
+    </div>
+
+    <!-- Wallpaper Tab -->
+    <div class="drawer-panel active" id="tab-wallpaper">
+      <div class="theme-wallpaper-section">
+        <div class="section-label"><i class="ph ph-sun"></i> Light Mode Wallpaper</div>
+        <div class="wp-grid" id="light-wp-grid"></div>
+        <label class="btn secondary upload-label" for="upload-light">
+          <i class="ph ph-upload-simple"></i> Upload Images
+          <input type="file" id="upload-light" accept="image/*" multiple style="display:none;">
+        </label>
+      </div>
+      <div class="theme-wallpaper-section">
+        <div class="section-label"><i class="ph ph-moon"></i> Dark Mode Wallpaper</div>
+        <div class="wp-grid" id="dark-wp-grid"></div>
+        <label class="btn secondary upload-label" for="upload-dark">
+          <i class="ph ph-upload-simple"></i> Upload Images
+          <input type="file" id="upload-dark" accept="image/*" multiple style="display:none;">
+        </label>
+      </div>
+    </div>
+
+    <!-- Color Theme Tab -->
+    <div class="drawer-panel" id="tab-colorTheme">
+      <div class="section-label">Preset Themes</div>
+      <div class="preset-grid" id="preset-grid"></div>
+
+      <div class="section-label" style="margin-top:20px;">Custom Theme</div>
+      <div class="color-pickers" id="color-pickers">
+        <!-- Dynamically built -->
+      </div>
+      <button class="btn primary" id="save-custom-theme" style="width:100%; margin-top:15px;">Apply Custom Theme</button>
+    </div>
+  </aside>
+
+  <!-- ══════ MODALS ══════ -->
+
+  <!-- Add Link -->
   <div class="modal-overlay" id="add-modal">
     <div class="glass-card modal-content">
-      <h2>Add New Link</h2>
+      <h2>Add Quick Link</h2>
       <div class="input-group">
-        <label for="link-name">Name</label>
+        <label>Name</label>
         <input type="text" id="link-name" placeholder="e.g. GitHub">
       </div>
       <div class="input-group">
-        <label for="link-url">URL</label>
+        <label>URL</label>
         <input type="url" id="link-url" placeholder="https://github.com">
       </div>
       <div class="input-group">
-        <label for="link-icon">Icon (Phosphor class)</label>
+        <label>Phosphor Icon <small style="color:var(--text-muted)">(optional — blank = auto favicon)</small></label>
         <input type="text" id="link-icon" placeholder="ph-github-logo">
-        <small><a href="https://phosphoricons.com/" target="_blank">Find icons here</a></small>
+        <small><a href="https://phosphoricons.com/" target="_blank">Browse icons ↗</a></small>
       </div>
       <div class="modal-actions">
         <button class="btn secondary" id="cancel-add">Cancel</button>
@@ -93,22 +132,22 @@
     </div>
   </div>
 
-  <!-- Add Search Engine Modal -->
+  <!-- Add Search Engine -->
   <div class="modal-overlay" id="engine-modal">
     <div class="glass-card modal-content">
       <h2>Add Search Engine</h2>
       <div class="input-group">
-        <label for="engine-name">Name</label>
+        <label>Name</label>
         <input type="text" id="engine-name" placeholder="e.g. Bing">
       </div>
       <div class="input-group">
-        <label for="engine-url">Search URL</label>
+        <label>Search URL</label>
         <input type="url" id="engine-url" placeholder="https://www.bing.com/search">
       </div>
       <div class="input-group">
-        <label for="engine-param">Query Parameter</label>
-        <input type="text" id="engine-param" placeholder="e.g. q">
-        <small>The URL parameter used for the search query.</small>
+        <label>Query Parameter</label>
+        <input type="text" id="engine-param" placeholder="q">
+        <small>Usually <strong>q</strong>. Right-click dropdown to remove a custom engine.</small>
       </div>
       <div class="modal-actions">
         <button class="btn secondary" id="cancel-engine">Cancel</button>
@@ -117,18 +156,18 @@
     </div>
   </div>
 
-  <!-- Add Widget Modal -->
+  <!-- Embed Widget -->
   <div class="modal-overlay" id="widget-modal">
     <div class="glass-card modal-content">
       <h2>Embed Custom Widget</h2>
-      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Paste HTML or iframe code from WidgetBox or Indify.</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:15px;">Paste HTML or an iframe from Indify, WidgetBox, etc.</p>
       <div class="input-group">
-        <label for="widget-code">HTML / iframe Code</label>
-        <textarea id="widget-code" rows="5" placeholder="<iframe src='...' ></iframe>" style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--card-border); background: var(--pill-bg); color: var(--text-main); outline: none; font-size: 14px; resize: vertical;"></textarea>
+        <label>HTML / iframe Code</label>
+        <textarea id="widget-code" rows="5" placeholder="<iframe src='...'></iframe>"></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn secondary" id="cancel-widget">Cancel</button>
-        <button class="btn primary" id="save-widget">Save Widget</button>
+        <button class="btn primary" id="save-widget">Add Widget</button>
       </div>
     </div>
   </div>
