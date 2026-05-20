@@ -25,6 +25,12 @@
         <button class="pill-btn" id="theme-toggle" title="Toggle Theme"><i class="ph ph-moon"></i></button>
         <button class="pill-btn" id="open-widget-modal" title="Add Widget"><i class="ph ph-squares-four"></i></button>
         <button class="pill-btn" id="open-customize" title="Customize"><i class="ph ph-paint-brush"></i></button>
+        <!-- Weather Section -->
+        <div class="weather-section" style="display:flex;align-items:center;gap:8px;margin-left:12px;">
+          <input type="text" id="weather-city" placeholder="City" style="padding:4px 8px;border-radius:4px;border:none;background:var(--card-bg);color:var(--text-main);" />
+          <button class="pill-btn" id="weather-search" title="Get Weather"><i class="ph ph-cloud-sun"></i></button>
+          <span id="weather-temp" style="font-size:14px;color:var(--text-muted);"></span>
+        </div>
       </div>
       <div class="pill-widget">
         <i class="ph ph-cloud-sun"></i>
@@ -70,7 +76,6 @@
     <!-- Tabs -->
     <div class="drawer-tabs">
       <button class="drawer-tab active" data-tab="wallpaper">Wallpaper</button>
-      <button class="drawer-tab" data-tab="colorTheme">Color Theme</button>
     </div>
 
     <!-- Wallpaper Tab -->
@@ -93,17 +98,7 @@
       </div>
     </div>
 
-    <!-- Color Theme Tab -->
-    <div class="drawer-panel" id="tab-colorTheme">
-      <div class="section-label">Preset Themes</div>
-      <div class="preset-grid" id="preset-grid"></div>
 
-      <div class="section-label" style="margin-top:20px;">Custom Theme</div>
-      <div class="color-pickers" id="color-pickers">
-        <!-- Dynamically built -->
-      </div>
-      <button class="btn primary" id="save-custom-theme" style="width:100%; margin-top:15px;">Apply Custom Theme</button>
-    </div>
   </aside>
 
   <!-- ══════ MODALS ══════ -->

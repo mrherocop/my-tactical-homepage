@@ -268,6 +268,48 @@ function renderWidgets() {
   const c = document.getElementById('widgets-grid');
   if (!c) return;
   c.innerHTML = '';
+  const widgets = getWidgets();
+  widgets.forEach(w => {
+    const el = document.createElement('div');
+    el.className = 'custom-widget-box';
+    el.draggable = true;
+    el.dataset.id = w.id;
+    el.innerHTML = `<div class="widget-content">${w.code}</div><button class="delete-widget-btn"><i class="ph ph-x"></i></button>`;
+    // Delete
+    el.querySelector('.delete-widget-btn').addEventListener('click', () => {
+      saveWidgets(getWidgets().filter(x => x.id !== w.id));
+      renderWidgets();
+    });
+    // Drag start
+    el.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', w.id);
+      e.currentTarget.classList.add('dragging');
+    });
+    el.addEventListener('dragend', e => {
+      e.currentTarget.classList.remove('dragging');
+    });
+    // Allow drop on other widgets
+    el.addEventListener('dragover', e => e.preventDefault());
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const draggedId = e.dataTransfer.getData('text/plain');
+      if (draggedId === w.id) return;
+      const widgetsArr = getWidgets();
+      const draggedIdx = widgetsArr.findIndex(x => x.id === draggedId);
+      const targetIdx = widgetsArr.findIndex(x => x.id === w.id);
+      if (draggedIdx > -1 && targetIdx > -1) {
+        const [moved] = widgetsArr.splice(draggedIdx, 1);
+        widgetsArr.splice(targetIdx, 0, moved);
+        saveWidgets(widgetsArr);
+        renderWidgets();
+      }
+    });
+    c.appendChild(el);
+  });
+}
+  const c = document.getElementById('widgets-grid');
+  if (!c) return;
+  c.innerHTML = '';
   getWidgets().forEach(w => {
     const el = document.createElement('div');
     el.className = 'custom-widget-box' + (isEditMode ? ' edit-mode' : '');
@@ -302,13 +344,12 @@ function initCustomizeDrawer() {
   const drawer  = document.getElementById('customize-drawer');
   const overlay = document.getElementById('drawer-overlay');
 
+
   document.getElementById('open-customize').addEventListener('click', () => {
-    drawer.classList.add('open'); overlay.classList.add('active');
-    renderWallpaperGrids(); renderPresets(); renderColorPickers();
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    renderWallpaperGrids();
   });
-  const close = () => { drawer.classList.remove('open'); overlay.classList.remove('active'); };
-  document.getElementById('close-customize').addEventListener('click', close);
-  overlay.addEventListener('click', close);
 
   // Tabs
   document.querySelectorAll('.drawer-tab').forEach(tab => {
@@ -348,9 +389,10 @@ function handleUpload(e, mode) {
   e.target.value = '';
 }
 
+// Wallpaper rendering functions
 function renderWallpaperGrids() {
   renderWpGrid('light', 'light-wp-grid');
-  renderWpGrid('dark',  'dark-wp-grid');
+  renderWpGrid('dark', 'dark-wp-grid');
 }
 
 function renderWpGrid(mode, gridId) {
@@ -365,142 +407,38 @@ function renderWpGrid(mode, gridId) {
     thumb.className = 'wp-thumb' + (d[selKey] === img.id ? ' selected' : '');
     thumb.style.backgroundImage = `url("${img.src}")`;
 
+    // Delete button for custom wallpapers
     if (!img.preset) {
       const del = document.createElement('button');
-      del.className = 'del-wp'; del.innerHTML = '<i class="ph ph-x"></i>';
+      del.className = 'del-wp';
+      del.innerHTML = '<i class="ph ph-x"></i>';
       del.title = 'Delete';
-      del.addEventListener('click', ev => { ev.stopPropagation(); deleteWallpaper(mode, img.id); });
+      del.addEventListener('click', ev => {
+        ev.stopPropagation();
+        const key = mode === 'light' ? 'lightImages' : 'darkImages';
+        d[key] = d[key].filter(i => i.id !== img.id);
+        if (d[selKey] === img.id) {
+          d[selKey] = d[key][0]?.id || '';
+        }
+        saveBgData(d);
+        if (mode === currentTheme) applyBackground();
+        renderWallpaperGrids();
+      });
       thumb.appendChild(del);
     }
 
+    // Select wallpaper on click
     thumb.addEventListener('click', () => {
       d[selKey] = img.id;
       saveBgData(d);
       if (mode === currentTheme) applyBackground();
-      renderWpGrid(mode, gridId);
+      renderWallpaperGrids();
     });
     grid.appendChild(thumb);
   });
 }
 
-function deleteWallpaper(mode, id) {
-  const d = getBgData();
-  const key = mode === 'light' ? 'lightImages' : 'darkImages';
-  const selKey = mode === 'light' ? 'selectedLight' : 'selectedDark';
-  d[key] = d[key].filter(i => i.id !== id);
-  if (d[selKey] === id) d[selKey] = d[key][0]?.id || '';
-  saveBgData(d);
-  if (mode === currentTheme) applyBackground();
-  renderWallpaperGrids();
-}
-
-// ──────────────────────────────────
-// COLOR THEMES
-// ──────────────────────────────────
-const PRESET_THEMES = [
-  {
-    id:'forest', name:'Forest',
-    light:{ '--bg-color':'#e5ecd9','--text-main':'#1d211b','--text-muted':'#5e6b57','--accent':'#2e4a30','--accent-hover':'#406342','--card-bg':'rgba(255,255,255,0.7)','--pill-bg':'rgba(255,255,255,0.8)' },
-    dark: { '--bg-color':'#0b120f','--text-main':'#f0f4f1','--text-muted':'#94a39b','--accent':'#8eb392','--accent-hover':'#a8ccac','--card-bg':'rgba(30,38,33,0.7)','--pill-bg':'rgba(40,48,43,0.85)' },
-    swatches:['#2e4a30','#e5ecd9','#8eb392']
-  },
-  {
-    id:'ocean', name:'Ocean',
-    light:{ '--bg-color':'#dce8f0','--text-main':'#0d1f2d','--text-muted':'#4a6274','--accent':'#1a5f7a','--accent-hover':'#276e8a','--card-bg':'rgba(255,255,255,0.7)','--pill-bg':'rgba(255,255,255,0.8)' },
-    dark: { '--bg-color':'#060f17','--text-main':'#cde4f0','--text-muted':'#7aaabb','--accent':'#5bc4e8','--accent-hover':'#78cfe8','--card-bg':'rgba(10,30,45,0.75)','--pill-bg':'rgba(15,40,60,0.85)' },
-    swatches:['#1a5f7a','#dce8f0','#5bc4e8']
-  },
-  {
-    id:'rose', name:'Rose',
-    light:{ '--bg-color':'#f8edf0','--text-main':'#2d1a1f','--text-muted':'#8a5564','--accent':'#c05070','--accent-hover':'#d06080','--card-bg':'rgba(255,255,255,0.72)','--pill-bg':'rgba(255,255,255,0.82)' },
-    dark: { '--bg-color':'#1a080e','--text-main':'#f5dde4','--text-muted':'#b08090','--accent':'#e890a8','--accent-hover':'#f0a0b8','--card-bg':'rgba(50,20,30,0.75)','--pill-bg':'rgba(60,25,35,0.85)' },
-    swatches:['#c05070','#f8edf0','#e890a8']
-  },
-  {
-    id:'slate', name:'Slate',
-    light:{ '--bg-color':'#e8eaed','--text-main':'#1a1c20','--text-muted':'#5a6070','--accent':'#4a5568','--accent-hover':'#5a6580','--card-bg':'rgba(255,255,255,0.7)','--pill-bg':'rgba(255,255,255,0.8)' },
-    dark: { '--bg-color':'#0d0e12','--text-main':'#e2e4e8','--text-muted':'#8090a0','--accent':'#90a0b8','--accent-hover':'#a0b0c8','--card-bg':'rgba(20,22,28,0.78)','--pill-bg':'rgba(28,30,38,0.88)' },
-    swatches:['#4a5568','#e8eaed','#90a0b8']
-  },
-  {
-    id:'amber', name:'Amber',
-    light:{ '--bg-color':'#fdf3e0','--text-main':'#2d1e00','--text-muted':'#8a6a30','--accent':'#c07020','--accent-hover':'#d08030','--card-bg':'rgba(255,255,255,0.72)','--pill-bg':'rgba(255,255,255,0.82)' },
-    dark: { '--bg-color':'#180e00','--text-main':'#f5e8cc','--text-muted':'#b09060','--accent':'#e8a048','--accent-hover':'#f0b060','--card-bg':'rgba(40,25,5,0.78)','--pill-bg':'rgba(50,30,8,0.88)' },
-    swatches:['#c07020','#fdf3e0','#e8a048']
-  },
-  {
-    id:'midnight', name:'Midnight',
-    light:{ '--bg-color':'#e8e8f5','--text-main':'#10102a','--text-muted':'#5050a0','--accent':'#4040c0','--accent-hover':'#5050d0','--card-bg':'rgba(255,255,255,0.72)','--pill-bg':'rgba(255,255,255,0.82)' },
-    dark: { '--bg-color':'#08081e','--text-main':'#d8d8f8','--text-muted':'#8080c0','--accent':'#8080e8','--accent-hover':'#9090f0','--card-bg':'rgba(15,15,40,0.8)','--pill-bg':'rgba(20,20,50,0.88)' },
-    swatches:['#4040c0','#e8e8f5','#8080e8']
-  }
-];
-
-const COLOR_VARS = [
-  { label:'Background',  key:'--bg-color' },
-  { label:'Text',        key:'--text-main' },
-  { label:'Muted Text',  key:'--text-muted' },
-  { label:'Accent',      key:'--accent' },
-  { label:'Accent Hover',key:'--accent-hover' }
-];
-
-function getActiveThemeId() { return localStorage.getItem('colorThemeId') || 'forest'; }
-function getCustomColors()  { const s = localStorage.getItem('customColors'); return s ? JSON.parse(s) : null; }
-
-function renderPresets() {
-  const grid = document.getElementById('preset-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  const active = getActiveThemeId();
-  PRESET_THEMES.forEach(pt => {
-    const card = document.createElement('div');
-    card.className = 'preset-card' + (active === pt.id ? ' active' : '');
-    card.style.background = pt.light['--bg-color'];
-    card.innerHTML = `
-      <div class="preset-swatches">${pt.swatches.map(s=>`<div class="swatch" style="background:${s}"></div>`).join('')}</div>
-      <div class="preset-name" style="color:${pt.light['--text-main']}">${pt.name}</div>
-    `;
-    card.addEventListener('click', () => {
-      localStorage.setItem('colorThemeId', pt.id);
-      localStorage.removeItem('customColors');
-      applyColorTheme();
-      renderPresets();
-    });
-    grid.appendChild(card);
-  });
-}
-
-function renderColorPickers() {
-  const container = document.getElementById('color-pickers');
-  if (!container) return;
-  const themeId = getActiveThemeId();
-  const preset = PRESET_THEMES.find(p => p.id === themeId) || PRESET_THEMES[0];
-  const custom = getCustomColors() || {};
-  const vars = currentTheme === 'dark' ? preset.dark : preset.light;
-
-  container.innerHTML = '';
-  COLOR_VARS.forEach(v => {
-    const row = document.createElement('div');
-    row.className = 'color-row';
-    const currentVal = (custom[currentTheme] && custom[currentTheme][v.key]) || vars[v.key] || '#ffffff';
-    row.innerHTML = `
-      <label>${v.label}</label>
-      <input type="color" data-var="${v.key}" value="${currentVal.trim()}">
-    `;
-    container.appendChild(row);
-  });
-}
-
-function saveCustomTheme() {
-  const pickers = document.querySelectorAll('#color-pickers input[type=color]');
-  const custom = getCustomColors() || {};
-  if (!custom[currentTheme]) custom[currentTheme] = {};
-  pickers.forEach(p => { custom[currentTheme][p.dataset.var] = p.value; });
-  localStorage.setItem('customColors', JSON.stringify(custom));
-  applyColorTheme();
-}
-
-function applyColorTheme() {
+// Apply color theme function removed
   const themeId = getActiveThemeId();
   const preset = PRESET_THEMES.find(p => p.id === themeId) || PRESET_THEMES[0];
   const vars = currentTheme === 'dark' ? preset.dark : preset.light;
