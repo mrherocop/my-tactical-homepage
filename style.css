@@ -285,11 +285,21 @@ body {
   border-radius: 16px;
   min-width: 70px;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .dock-item:hover, .add-link-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-5px);
+}
+
+.dock-item.edit-mode {
+  animation: shake 0.5s infinite alternate;
+}
+
+@keyframes shake {
+  0% { transform: rotate(-2deg); }
+  100% { transform: rotate(2deg); }
 }
 
 [data-theme="dark"] .dock-item:hover, [data-theme="dark"] .add-link-btn:hover {
@@ -306,6 +316,23 @@ body {
   background: rgba(255,255,255,0.4);
   font-size: 24px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  position: relative;
+}
+
+.delete-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ff4b4b;
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 [data-theme="dark"] .icon-wrapper {

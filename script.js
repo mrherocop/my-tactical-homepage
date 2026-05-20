@@ -212,14 +212,20 @@ const defaultLinks = [
   { id: '4', name: 'Mail', url: 'https://mail.google.com', icon: 'ph-envelope-simple' }
 ];
 
+let isEditMode = false;
+
 function initLinks() {
+  // Check if they ever initialized links (to allow empty array)
+  if (localStorage.getItem('custom_links') === null) {
+    saveLinks(defaultLinks);
+  }
   renderLinks();
 }
 
 function getLinks() {
   const saved = localStorage.getItem('custom_links');
   if (saved) return JSON.parse(saved);
-  return defaultLinks;
+  return [];
 }
 
 function saveLinks(links) {
@@ -234,25 +240,48 @@ function renderLinks() {
   
   links.forEach(link => {
     const el = document.createElement('a');
-    el.href = link.url;
-    el.className = 'dock-item';
+    el.href = isEditMode ? '#' : link.url;
+    el.className = 'dock-item' + (isEditMode ? ' edit-mode' : '');
+    
+    // Determine if it's a Phosphor icon or a favicon
+    let iconHTML = '';
+    if (link.icon && link.icon.startsWith('ph-')) {
+      iconHTML = `<i class="ph ${link.icon}"></i>`;
+    } else {
+      try {
+        const domain = new URL(link.url).hostname;
+        iconHTML = `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="${link.name}" style="width:24px; height:24px; border-radius:4px;">`;
+      } catch(e) {
+        iconHTML = `<i class="ph ph-link"></i>`;
+      }
+    }
+
     el.innerHTML = `
       <div class="icon-wrapper">
-        <i class="ph ${link.icon || 'ph-link'}"></i>
+        ${iconHTML}
+        ${isEditMode ? '<div class="delete-badge"><i class="ph ph-x"></i></div>' : ''}
       </div>
       <span>${link.name}</span>
     `;
     
-    el.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      if(confirm(`Remove ${link.name}?`)) {
+    if (isEditMode) {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
         removeLink(link.id);
-      }
-    });
+      });
+    } else {
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if(confirm(`Remove ${link.name}?`)) {
+          removeLink(link.id);
+        }
+      });
+    }
 
     container.appendChild(el);
   });
   
+  // Add Link Button
   const addBtn = document.createElement('button');
   addBtn.className = 'add-link-btn';
   addBtn.id = 'open-add-modal';
@@ -265,8 +294,22 @@ function renderLinks() {
   addBtn.addEventListener('click', () => {
     document.getElementById('add-modal').classList.add('active');
   });
-  
   container.appendChild(addBtn);
+
+  // Edit Mode Toggle Button
+  const editBtn = document.createElement('button');
+  editBtn.className = 'add-link-btn';
+  editBtn.innerHTML = `
+    <div class="icon-wrapper" style="border: 1px dashed var(--text-muted);">
+      <i class="ph ${isEditMode ? 'ph-check' : 'ph-pencil'}"></i>
+    </div>
+    <span>${isEditMode ? 'Done' : 'Edit'}</span>
+  `;
+  editBtn.addEventListener('click', () => {
+    isEditMode = !isEditMode;
+    renderLinks();
+  });
+  container.appendChild(editBtn);
 }
 
 function removeLink(id) {
@@ -294,7 +337,7 @@ function initLinkModal() {
   saveBtn.addEventListener('click', () => {
     const name = nameInput.value.trim();
     let url = urlInput.value.trim();
-    const icon = iconInput.value.trim() || 'ph-link';
+    const icon = iconInput.value.trim(); // Leave empty to fetch favicon
     
     if (name && url) {
       if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
