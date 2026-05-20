@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Tab</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Background Diorama -->
+  <div class="background-wrapper">
+    <img src="assets/light_bg.jpg" class="bg-img" id="light-bg" alt="Light Mode Background">
+    <img src="assets/dark_bg.jpg" class="bg-img" id="dark-bg" alt="Dark Mode Background">
+  </div>
+
+  <!-- Main UI Layer -->
+  <div class="ui-layer">
+    
+    <!-- Top Widgets -->
+    <header class="top-bar">
+      <button class="pill-btn theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+        <i class="ph ph-moon"></i>
+      </button>
+      <div class="pill-widget" id="weather-widget">
+        <i class="ph ph-cloud-sun"></i>
+        <span>22°C</span>
+      </div>
+    </header>
+
+    <!-- Center Content -->
+    <main class="center-content">
+      <div class="glass-card main-widget">
+        <div class="clock-container">
+          <h1 id="time">00:00</h1>
+          <p id="date">Loading...</p>
+        </div>
+
+        <div class="search-engines" id="engine-tabs">
+          <button class="engine-tab active" data-engine="google">Google</button>
+          <button class="engine-tab" data-engine="duckduckgo">DuckDuckGo</button>
+          <button class="engine-tab" data-engine="youtube">YouTube</button>
+        </div>
+        
+        <form class="search-form" id="search-form" action="https://www.google.com/search" method="GET">
+          <i class="ph ph-magnifying-glass search-icon"></i>
+          <!-- Name is dynamic based on engine -->
+          <input type="text" name="q" id="search-input" placeholder="Search Google..." autocomplete="off" autofocus>
+        </form>
+      </div>
+    </main>
+
+    <!-- Bottom Dock -->
+    <footer class="bottom-dock-container">
+      <div class="dock glass-card" id="links-container">
+        <!-- Links will be injected here by JS -->
+      </div>
+    </footer>
+  </div>
+
+  <!-- Add Link Modal -->
+  <div class="modal-overlay" id="add-modal">
+    <div class="glass-card modal-content">
+      <h2>Add New Link</h2>
+      <div class="input-group">
+        <label for="link-name">Name</label>
+        <input type="text" id="link-name" placeholder="e.g. GitHub">
+      </div>
+      <div class="input-group">
+        <label for="link-url">URL</label>
+        <input type="url" id="link-url" placeholder="https://github.com">
+      </div>
+      <div class="input-group">
+        <label for="link-icon">Icon (Phosphor class)</label>
+        <input type="text" id="link-icon" placeholder="ph-github-logo">
+        <small><a href="https://phosphoricons.com/" target="_blank">Find icons here</a></small>
+      </div>
+      <div class="modal-actions">
+        <button class="btn secondary" id="cancel-add">Cancel</button>
+        <button class="btn primary" id="save-add">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
